@@ -1,4 +1,4 @@
-import { readInput, copyOutput } from "./lib/clipboard";
+import { readInput, outputResult } from "./lib/clipboard";
 import { clean } from "./lib/transformers/clean-watermark";
 import { showHUD } from "@raycast/api";
 
@@ -13,5 +13,5 @@ export default async function Command() {
     return;
   }
 
-  await copyOutput(cleaned, `Removed ${parts.join(", ")}`);
+  await outputResult(cleaned, `Removed ${parts.join(", ")}`);
 }

@@ -9,7 +9,9 @@
 
 type ExtensionPreferences = {
   /** AI Model - Claude model for the AI unwrap command */
-  "model": "claude-3-haiku-20240307" | "claude-3-5-haiku-20241022" | "claude-haiku-4-5-20250414"
+  "model": "claude-3-haiku-20240307" | "claude-3-5-haiku-20241022" | "claude-haiku-4-5-20250414",
+  /** Output Mode - How no-view commands deliver results */
+  "outputMode": "copy" | "paste"
 }
 
 /** Preferences accessible in all the extension's commands */

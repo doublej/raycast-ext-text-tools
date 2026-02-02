@@ -1,5 +1,5 @@
 import { LaunchProps } from "@raycast/api";
-import { readInput, copyOutput } from "./lib/clipboard";
+import { readInput, outputResult } from "./lib/clipboard";
 import { wrapText } from "./lib/transformers/wrap";
 
 export default async function Command(
@@ -9,5 +9,5 @@ export default async function Command(
   const text = await readInput();
   if (!text) return;
 
-  await copyOutput(wrapText(text, tag), `Wrapped in <${tag}> tags`);
+  await outputResult(wrapText(text, tag), `Wrapped in <${tag}> tags`);
 }

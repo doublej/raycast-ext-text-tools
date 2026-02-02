@@ -1,105 +1,174 @@
 import {
-  Form,
+  List,
   ActionPanel,
   Action,
   Clipboard,
-  showHUD,
-  showToast,
-  Toast,
   getPreferenceValues,
+  Icon,
 } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { clean } from "./lib/transformers/clean-watermark";
 import { unwrapText } from "./lib/transformers/unwrap";
 import { unwrapWithClaude } from "./lib/transformers/unwrap-claude";
+import { wrapText } from "./lib/transformers/wrap";
 
 interface Preferences {
   model: string;
 }
 
-type TransformId = "clean-watermark" | "unwrap" | "unwrap-ai";
+const TAG_PRESETS = [
+  "context",
+  "document",
+  "code",
+  "instructions",
+  "system",
+  "user",
+  "assistant",
+] as const;
 
-const TRANSFORMS: { id: TransformId; title: string }[] = [
-  { id: "clean-watermark", title: "Clean Watermark" },
-  { id: "unwrap", title: "Unwrap Text" },
-  { id: "unwrap-ai", title: "Unwrap Text (AI)" },
-];
+function useClipboard() {
+  return usePromise(() => Clipboard.readText());
+}
 
-async function transform(
-  id: TransformId,
-  text: string,
-  model: string,
-): Promise<string> {
-  switch (id) {
-    case "clean-watermark":
-      return clean(text).cleaned;
-    case "unwrap":
-      return unwrapText(text);
-    case "unwrap-ai":
-      return unwrapWithClaude(text, model);
-  }
+function previewMarkdown(text: string): string {
+  return "```\n" + text + "\n```";
+}
+
+function cleanMetadata(parts: string[]): string {
+  if (parts.length === 0) return "*No changes*";
+  return parts.map((p) => `- Removed ${p}`).join("\n");
 }
 
 export default function Command() {
   const { model } = getPreferenceValues<Preferences>();
-  const { data: clipboardText } = usePromise(() => Clipboard.readText());
-  const [transformId, setTransformId] =
-    useState<TransformId>("clean-watermark");
+  const { data: clipText, isLoading: clipLoading } = useClipboard();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const aiCache = useRef<string | null>(null);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
-  async function handleSubmit(values: { text: string }) {
-    const { text } = values;
-    if (!text.trim()) {
-      await showHUD("No text to transform");
-      return;
-    }
+  const text = clipText ?? "";
 
-    if (transformId === "unwrap-ai") {
-      const toast = await showToast({
-        style: Toast.Style.Animated,
-        title: "Transforming...",
-      });
+  const cleanResult = text ? clean(text) : { cleaned: "", parts: [] };
+  const unwrapResult = text ? unwrapText(text) : "";
+
+  const fetchAi = useCallback(
+    async (input: string) => {
+      if (aiCache.current !== null) return;
+      setAiLoading(true);
+      setAiError(null);
       try {
-        const result = await transform(transformId, text, model);
-        await Clipboard.copy(result);
-        toast.hide();
-        await showHUD("Transformed and copied");
+        const result = await unwrapWithClaude(input, model);
+        aiCache.current = result;
+        setAiResult(result);
       } catch (err) {
-        toast.style = Toast.Style.Failure;
-        toast.title = "Transform failed";
-        toast.message = String(err);
+        setAiError(String(err));
+      } finally {
+        setAiLoading(false);
       }
-    } else {
-      const result = await transform(transformId, text, model);
-      await Clipboard.copy(result);
-      await showHUD("Transformed and copied");
+    },
+    [model],
+  );
+
+  function handleSelectionChange(id: string | null) {
+    setSelectedId(id);
+    if (id === "unwrap-ai" && text && aiCache.current === null && !aiLoading) {
+      fetchAi(text);
     }
   }
 
+  function getDetail(id: string | null): string {
+    if (!text) return "*Clipboard is empty*";
+    if (!id) return "";
+
+    if (id === "clean-watermark") {
+      return (
+        previewMarkdown(cleanResult.cleaned) +
+        "\n\n" +
+        cleanMetadata(cleanResult.parts)
+      );
+    }
+    if (id === "unwrap") return previewMarkdown(unwrapResult);
+    if (id === "unwrap-ai") {
+      if (aiLoading) return "*Calling Claude...*";
+      if (aiError) return `**Error:** ${aiError}`;
+      return aiResult
+        ? previewMarkdown(aiResult)
+        : "*Select to start AI unwrap*";
+    }
+    if (id.startsWith("tag-")) {
+      const tag = id.replace("tag-", "");
+      return previewMarkdown(wrapText(text, tag));
+    }
+    return "";
+  }
+
+  function getResultText(id: string): string {
+    if (id === "clean-watermark") return cleanResult.cleaned;
+    if (id === "unwrap") return unwrapResult;
+    if (id === "unwrap-ai") return aiResult ?? "";
+    if (id.startsWith("tag-")) return wrapText(text, id.replace("tag-", ""));
+    return "";
+  }
+
+  const itemLoading = selectedId === "unwrap-ai" && aiLoading;
+
   return (
-    <Form
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm title="Transform" onSubmit={handleSubmit} />
-        </ActionPanel>
-      }
+    <List
+      isShowingDetail
+      isLoading={clipLoading || itemLoading}
+      onSelectionChange={handleSelectionChange}
     >
-      <Form.Dropdown
-        id="transform"
-        title="Transformation"
-        value={transformId}
-        onChange={(v) => setTransformId(v as TransformId)}
-      >
-        {TRANSFORMS.map((t) => (
-          <Form.Dropdown.Item key={t.id} value={t.id} title={t.title} />
+      <List.Section title="Transform">
+        <List.Item
+          id="clean-watermark"
+          title="Clean Watermark"
+          icon={Icon.Eraser}
+          detail={<List.Item.Detail markdown={getDetail("clean-watermark")} />}
+          actions={<ItemActions text={getResultText("clean-watermark")} />}
+        />
+        <List.Item
+          id="unwrap"
+          title="Unwrap Text"
+          icon={Icon.Text}
+          detail={<List.Item.Detail markdown={getDetail("unwrap")} />}
+          actions={<ItemActions text={getResultText("unwrap")} />}
+        />
+        <List.Item
+          id="unwrap-ai"
+          title="Unwrap Text (AI)"
+          icon={Icon.Stars}
+          detail={<List.Item.Detail markdown={getDetail("unwrap-ai")} />}
+          actions={<ItemActions text={getResultText("unwrap-ai")} />}
+        />
+      </List.Section>
+      <List.Section title="Wrap in Tags">
+        {TAG_PRESETS.map((tag) => (
+          <List.Item
+            key={tag}
+            id={`tag-${tag}`}
+            title={`<${tag}>`}
+            icon={Icon.Code}
+            detail={<List.Item.Detail markdown={getDetail(`tag-${tag}`)} />}
+            actions={<ItemActions text={getResultText(`tag-${tag}`)} />}
+          />
         ))}
-      </Form.Dropdown>
-      <Form.TextArea
-        id="text"
-        title="Text"
-        placeholder="Paste or type text here"
-        defaultValue={clipboardText ?? ""}
+      </List.Section>
+    </List>
+  );
+}
+
+function ItemActions({ text }: { text: string }) {
+  return (
+    <ActionPanel>
+      <Action.CopyToClipboard title="Copy to Clipboard" content={text} />
+      <Action.Paste
+        title="Paste to Frontmost App"
+        content={text}
+        shortcut={{ modifiers: ["cmd", "shift"], key: "enter" }}
       />
-    </Form>
+    </ActionPanel>
   );
 }

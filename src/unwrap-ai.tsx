@@ -1,5 +1,5 @@
 import { showToast, Toast, getPreferenceValues } from "@raycast/api";
-import { readInput, copyOutput } from "./lib/clipboard";
+import { readInput, outputResult } from "./lib/clipboard";
 import { unwrapWithClaude } from "./lib/transformers/unwrap-claude";
 
 interface Preferences {
@@ -19,7 +19,7 @@ export default async function Command() {
   try {
     const result = await unwrapWithClaude(text, model);
     toast.hide();
-    await copyOutput(result, "Text unwrapped with AI and copied");
+    await outputResult(result, "Text unwrapped with AI");
   } catch (err) {
     toast.style = Toast.Style.Failure;
     toast.title = "Failed to unwrap text";

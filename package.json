@@ -12,25 +12,29 @@
       "name": "clean-watermark",
       "title": "Clean Watermark",
       "description": "Remove watermarks, formatting, and junk from clipboard text",
-      "mode": "no-view"
+      "mode": "no-view",
+      "icon": "icon-clean.png"
     },
     {
       "name": "unwrap-text",
       "title": "Unwrap Text",
       "description": "Unwrap hard-wrapped clipboard text using heuristics",
-      "mode": "no-view"
+      "mode": "no-view",
+      "icon": "icon-unwrap.png"
     },
     {
       "name": "unwrap-ai",
       "title": "Unwrap Text (AI)",
       "description": "Unwrap hard-wrapped clipboard text using Claude AI",
-      "mode": "no-view"
+      "mode": "no-view",
+      "icon": "icon-unwrap.png"
     },
     {
       "name": "wrap-clipboard",
       "title": "Wrap Clipboard",
       "description": "Wrap clipboard content in XML-like tags",
       "mode": "no-view",
+      "icon": "icon-wrap.png",
       "arguments": [
         {
           "name": "tag",
@@ -45,6 +49,7 @@
       "title": "Wrap Selection",
       "description": "Wrap selected text in XML-like tags in place",
       "mode": "no-view",
+      "icon": "icon-wrap.png",
       "arguments": [
         {
           "name": "tag",
@@ -73,6 +78,18 @@
         { "title": "Claude 3 Haiku", "value": "claude-3-haiku-20240307" },
         { "title": "Claude 3.5 Haiku", "value": "claude-3-5-haiku-20241022" },
         { "title": "Claude Haiku 4.5", "value": "claude-haiku-4-5-20250414" }
+      ]
+    },
+    {
+      "name": "outputMode",
+      "type": "dropdown",
+      "title": "Output Mode",
+      "description": "How no-view commands deliver results",
+      "required": false,
+      "default": "copy",
+      "data": [
+        { "title": "Copy to Clipboard", "value": "copy" },
+        { "title": "Paste to Frontmost App", "value": "paste" }
       ]
     }
   ],
