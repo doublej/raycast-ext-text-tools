@@ -1,0 +1,97 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "text-tools",
+  "title": "Text Tools",
+  "description": "Clean, unwrap, and wrap clipboard text",
+  "icon": "command-icon.png",
+  "author": "jurrejan",
+  "categories": ["Productivity"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "clean-watermark",
+      "title": "Clean Watermark",
+      "description": "Remove watermarks, formatting, and junk from clipboard text",
+      "mode": "no-view"
+    },
+    {
+      "name": "unwrap-text",
+      "title": "Unwrap Text",
+      "description": "Unwrap hard-wrapped clipboard text using heuristics",
+      "mode": "no-view"
+    },
+    {
+      "name": "unwrap-ai",
+      "title": "Unwrap Text (AI)",
+      "description": "Unwrap hard-wrapped clipboard text using Claude AI",
+      "mode": "no-view"
+    },
+    {
+      "name": "wrap-clipboard",
+      "title": "Wrap Clipboard",
+      "description": "Wrap clipboard content in XML-like tags",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "tag",
+          "type": "text",
+          "placeholder": "Tag name",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "wrap-selection",
+      "title": "Wrap Selection",
+      "description": "Wrap selected text in XML-like tags in place",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "tag",
+          "type": "text",
+          "placeholder": "Tag name",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "text-transformer",
+      "title": "Text Transformer",
+      "description": "Pick a transformation and apply it to text",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "model",
+      "type": "dropdown",
+      "title": "AI Model",
+      "description": "Claude model for the AI unwrap command",
+      "required": false,
+      "default": "claude-3-haiku-20240307",
+      "data": [
+        { "title": "Claude 3 Haiku", "value": "claude-3-haiku-20240307" },
+        { "title": "Claude 3.5 Haiku", "value": "claude-3-5-haiku-20241022" },
+        { "title": "Claude Haiku 4.5", "value": "claude-haiku-4-5-20250414" }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.83.0",
+    "@raycast/utils": "^1.17.0",
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.11",
+    "@types/node": "^20.8.10",
+    "@types/react": "^18.3.3",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "ray build --skip-types -e dist -o dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  }
+}
