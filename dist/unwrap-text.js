@@ -1,8 +1,0 @@
-"use strict";var a=Object.defineProperty;var d=Object.getOwnPropertyDescriptor;var h=Object.getOwnPropertyNames;var w=Object.prototype.hasOwnProperty;var y=(t,n)=>{for(var e in n)a(t,e,{get:n[e],enumerable:!0})},x=(t,n,e,r)=>{if(n&&typeof n=="object"||typeof n=="function")for(let i of h(n))!w.call(t,i)&&i!==e&&a(t,i,{get:()=>n[i],enumerable:!(r=d(n,i))||r.enumerable});return t};var C=t=>x(a({},"__esModule",{value:!0}),t);var v={};y(v,{default:()=>g});module.exports=C(v);var s=require("@raycast/api");async function p(){let t=await s.Clipboard.readText();return t?.trim()?t:(await(0,s.showHUD)("Clipboard is empty"),null)}async function f(t,n){await s.Clipboard.copy(t),await(0,s.showHUD)(n)}var l=/^(\s*[-*]|\s*\d+\.)\s/,E=/[.!?:]$/;function c(t){let n=t.filter(r=>r.trimEnd().length>0);if(n.length===0)return t;let e=Math.min(...n.map(r=>r.match(/^(\s*)/)?.[1].length??0));return e===0?t:t.map(r=>r.slice(e))}function T(t){return t.every(n=>n.trimEnd().length===0||/^\s{4,}/.test(n))}function I(t){return t.length>0&&l.test(t[0])}function b(t,n){if(l.test(n)||n.startsWith("#"))return!1;let e=t.trimEnd();if(!E.test(e))return!0;let r=n.trimStart().charAt(0);return r===r.toLowerCase()&&r!==r.toUpperCase()}function j(t){let n=[t[0].trim()];for(let e=1;e<t.length;e++){let r=n[n.length-1],i=t[e].trim();i.length!==0&&(b(r,i)?n[n.length-1]=r+" "+i:n.push(i))}return n.join(`
-`)}function m(t){let n=t.replace(/\r\n?/g,`
-`),e=c(n.split(`
-`)),r=[],i=[];for(let o of e)o.trimEnd().length===0?i.length>0&&(r.push(i),i=[]):i.push(o);return i.length>0&&r.push(i),r.map(o=>{if(T(o))return c(o).join(`
-`);let u=c(o);return I(u)?u.join(`
-`):j(u)}).join(`
-
-`)}async function g(){let t=await p();t&&await f(m(t),"Text unwrapped and copied")}
