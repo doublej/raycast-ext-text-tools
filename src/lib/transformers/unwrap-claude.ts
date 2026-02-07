@@ -1,4 +1,5 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
+import { homedir } from "os";
 
 const SYSTEM_PROMPT = `You are a text formatting tool. Your ONLY job is to unwrap hard-wrapped text into clean paragraphs.
 
@@ -25,6 +26,7 @@ export async function unwrapWithClaude(
       permissionMode: "bypassPermissions",
       maxTurns: 1,
       allowedTools: [],
+      cwd: homedir(),
     },
   });
 
