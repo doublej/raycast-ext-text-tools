@@ -1,5 +1,6 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { homedir } from "os";
+import { join } from "path";
 
 const SYSTEM_PROMPT = `You are a text formatting tool. Your ONLY job is to unwrap hard-wrapped text into clean paragraphs.
 
@@ -18,6 +19,9 @@ export async function unwrapWithClaude(
   text: string,
   model: string,
 ): Promise<string> {
+  const claudePath = join(homedir(), ".local", "bin", "claude");
+
+  const home = homedir();
   const response = query({
     prompt: text,
     options: {
@@ -26,7 +30,9 @@ export async function unwrapWithClaude(
       permissionMode: "bypassPermissions",
       maxTurns: 1,
       allowedTools: [],
-      cwd: homedir(),
+      cwd: home,
+      pathToClaudeCodeExecutable: claudePath,
+      env: { ...process.env, HOME: home, PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin" },
     },
   });
 
